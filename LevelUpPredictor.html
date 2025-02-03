@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level Up Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text color */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background-color: #1e1e1e; /* Darker container background */
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #ffffff; /* White text for the heading */
+        }
+        label {
+            font-size: 18px;
+            margin: 10px;
+            display: block;
+            color: #e0e0e0; /* Light text color for labels */
+        }
+        input[type="file"], input[type="text"] {
+            padding: 8px;
+            margin: 8px 0;
+            font-size: 16px;
+            background-color: #333; /* Dark input background */
+            color: #e0e0e0; /* Light text color for input */
+            border: 1px solid #444; /* Dark border */
+            border-radius: 5px;
+        }
+        input[type="file"]:focus, input[type="text"]:focus {
+            border-color: #4CAF50; /* Highlight border on focus */
+            outline: none; /* Remove default outline */
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50; /* Button background */
+            color: white; /* Button text color */
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049; /* Button hover color */
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #e0e0e0; /* Light text color for results */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Level Up Predictor</h1>
+    
+    <label for="fileInput">Upload Player Data File (CSV):</label>
+    <input type="file" id="fileInput" accept=".txt, .csv" />
+    
+    <label for="playerID">Enter Player ID:</label>
+    <input type="text" id="playerID" placeholder="Enter Player ID" />
+    
+    <button onclick="predictSessions()">Predict Sessions</button>
+    
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+    let playerData = [];
+
+    // Function to parse the CSV or TSV data
+    function parseCSV(text) {
+        const rows = text.split('\n');
+        const data = [];
+        for (let i = 1; i < rows.length; i++) { // Skipping the header row
+            const columns = rows[i].split(/[\t,]/); // Split by tab or comma
+            if (columns.length >= 5) {
+                const player = {
+                    id: columns[0].trim(), // Player ID in the first column
+                    level: parseInt(columns[2].trim()), // Level in the third column
+                    score: parseInt(columns[4].trim()) // Score in the fifth column
+                };
+                // Check if the parsed values are valid numbers
+                if (!isNaN(player.level) && !isNaN(player.score)) {
+                    data.push(player);
+                } else {
+                    console.error(`Invalid data at row ${i + 1}: ${rows[i]}`);
+                }
+            }
+        }
+        return data;
+    }
+
+    // Listen for file input and read the file
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    playerData = parseCSV(e.target.result);
+                    alert('File successfully uploaded!');
+                } catch (error) {
+                    alert('Error reading the file. Please make sure it is a valid CSV or TSV.');
+                }
+            };
+            reader.readAsText(file);
+        } else {
+            alert('Please upload a valid CSV or text file.');
+        }
+    });
+
+    // Predict the number of sessions needed to reach level 10 for a specific player
+    function predictSessions() {
+        const playerID = document.getElementById('playerID').value.trim();
+        if (playerData.length === 0) {
+            alert('Please upload a player data file first.');
+            return;
+        }
+
+        const scoreToLevel10 = 10000; // Example score needed to reach level 10
+        const player = playerData.find(p => p.id === playerID);
+
+        if (!player) {
+            alert(`Player ID ${playerID} not found.`);
+            return;
+        }
+
+        if (player.level < 1 || player.level > 9) {
+            document.getElementById('result').innerHTML = `Player with level ${player.level} is invalid. Level must be between 1 and 9.`;
+            return;
+        }
+
+        // Calculate the total score needed to reach level 10
+        const totalScoreNeeded = scoreToLevel10 - (player.level * (scoreToLevel10 / 10));
+        
+        if (totalScoreNeeded <= 0) {
+            document.getElementById('result').innerHTML = `Player with level ${player.level} is already at or above level 10!`;
+            return;
+        }
+
+        // Calculate the number of sessions needed
+        const sessionsNeeded = Math.ceil(totalScoreNeeded / player.score);
+        document.getElementById('result').innerHTML = `Player with ID ${player.id} and level ${player.level} needs approximately <strong>${sessionsNeeded}</strong> sessions to reach level 10.`;
+    }
+</script>
+
+</body>
+</html>
