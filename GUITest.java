@@ -1,5 +1,6 @@
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,6 +9,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.table.DefaultTableModel;
 
 public class GUITest extends JFrame {
 
@@ -30,36 +32,91 @@ public class GUITest extends JFrame {
     private DefaultTableModel tableModel;
 
     public GUITest() {
-        setTitle("Player Data Analyzer");
-        setSize(600, 400);
+        // Set up the frame
+        setTitle("Level-Up Predictor");
+        setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Input panel
-        JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new FlowLayout());
+        // Set a modern look and feel
+        UIManager.put("Panel.background", new Color(45, 45, 45));
+        UIManager.put("TextField.background", new Color(60, 63, 65));
+        UIManager.put("TextField.foreground", Color.WHITE);
+        UIManager.put("TextArea.background", new Color(60, 63, 65));
+        UIManager.put("TextArea.foreground", Color.WHITE);
+        UIManager.put("Button.background", new Color(70, 130, 180)); // Steel Blue
+        UIManager.put("Button.foreground", Color.WHITE);
+        UIManager.put("Table.background", new Color(60, 63, 65));
+        UIManager.put("Table.foreground", Color.WHITE);
+        UIManager.put("Table.gridColor", Color.LIGHT_GRAY);
+        UIManager.put("TableHeader.background", new Color(70, 130, 180)); // Steel Blue
+        UIManager.put("TableHeader.foreground", Color.WHITE);
+        UIManager.put("Label.foreground", Color.WHITE);
+        UIManager.put("ScrollPane.background", new Color(45, 45, 45));
 
-        playerIdField = new JTextField(15);
+        // Input panel with GridBagLayout
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 10, 10); // Add some padding
+
+        // Description label
+        JLabel descriptionLabel = new JLabel("Predict how many sessions a player needs to reach level 10 based on the player's average score per session");
+        descriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        descriptionLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2; // Span across two columns
+        inputPanel.add(descriptionLabel, gbc);
+
+        // Player ID label and field
+        gbc.gridwidth = 1; // Reset to default
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        inputPanel.add(new JLabel("Player ID:"), gbc);
+
+        playerIdField = new JTextField(10);
+        gbc.gridx = 1;
+        inputPanel.add(playerIdField, gbc);
+
+        // Upload button
         uploadButton = new JButton("Upload CSV");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2; // Span across two columns
+        uploadButton.setFocusPainted(false);
+        uploadButton.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        inputPanel.add(uploadButton, gbc);
+
+        // Result area
         resultArea = new JTextArea(10, 40);
         resultArea.setEditable(false);
         resultArea.setLineWrap(true);
         resultArea.setWrapStyleWord(true);
-
-        inputPanel.add(new JLabel("Player ID:"));
-        inputPanel.add(playerIdField);
-        inputPanel.add(uploadButton);
+        JScrollPane resultScrollPane = new JScrollPane(resultArea);
+        resultScrollPane.setBorder(BorderFactory.createTitledBorder(
+            new LineBorder(Color.WHITE, 2 ), "Results", TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), Color.WHITE));
 
         // Table for displaying data
         String[] columnNames = {"Player ID", "Level", "Score"};
         tableModel = new DefaultTableModel(columnNames, 0);
         dataTable = new JTable(tableModel);
+        dataTable.setFillsViewportHeight(true);
         JScrollPane tableScrollPane = new JScrollPane(dataTable);
+        tableScrollPane.setBorder(BorderFactory.createTitledBorder(
+            new LineBorder(Color.WHITE, 2), "Player Data", TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), Color.WHITE));
+
+        // Add padding around the table
+        JPanel tablePanel = new JPanel();
+        tablePanel.setLayout(new BorderLayout());
+        tablePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding
+        tablePanel.add(tableScrollPane, BorderLayout.CENTER);
 
         // Add components to the frame
         add(inputPanel, BorderLayout.NORTH);
-        add(tableScrollPane, BorderLayout.CENTER);
-        add(new JScrollPane(resultArea), BorderLayout.SOUTH);
+        add(tablePanel, BorderLayout.CENTER);
+        add(resultScrollPane, BorderLayout.SOUTH);
 
         // Button action
         uploadButton.addActionListener(new ActionListener() {
@@ -128,7 +185,7 @@ public class GUITest extends JFrame {
 
         StringBuilder result = new StringBuilder();
         result.append("Player ID: ").append(playerId).append("\n");
-        result .append("Total Score: ").append(totalScore).append("\n");
+        result.append("Total Score: ").append(totalScore).append("\n");
         result.append("Session Count: ").append(sessionCount).append("\n");
         result.append("Current Level: ").append(currentLevel).append("\n");
         result.append("Average Score: ").append(String.format("%.2f", averageScore)).append("\n");
@@ -144,7 +201,6 @@ public class GUITest extends JFrame {
         while (currentLevel < targetLevel) {
             sessionsNeeded++;
             currentLevel++;
-            // Assuming a fixed score increase per level for simplicity
             averageScore += 100; // Example score increase per session
         }
 
